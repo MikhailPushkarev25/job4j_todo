@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+            integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<style type="text/css">
+    @import url("style.css");
+    p {
+        color: #0004ff;
+        font-size: 16px;
+    }
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<div id="myDIV" class="header">
+    <h2>Список задач</h2>
+    <input type="text" id="myInput" name="des" placeholder="Запишите Задачу">
+    <button type="submit" id="sendTask" class="addBtn" onclick="doSend()">Выполнить</button>
+</div>
+<div class="form-check" >
+    <input class="form-check-input" type="checkbox" value="" id="showTasks">
+    <label class="form-check-label" for="showTasks">
+        Показать все задачи
+    </label>
+</div>
+<div class="container">
+<table class="table" id="table">
+    <thead>
+    <tr>
+        <th>Задача</th>
+        <th>Дата</th>
+        <th>Статус</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr id="tableRow">
+    </tr>
+    </tbody>
+</table>
+</div>
+
+<script>
+  function validate() {
+      let addBtn = document.getElementById("myInput").value;
+      if (addBtn === '' || addBtn === null) {
+          alert('Вы не указали задачу!');
+          return false;
+      }
+      return true;
+  }
+
+  function doSend() {
+      if (validate()) {
+          console.log("button");
+          let describe = document.getElementById("myInput").value;
+          console.log(describe);
+          $.ajax({
+              type: 'POST',
+              url: 'http://localhost:8080/todo/add',
+              data: {
+                  id: 0,
+                  des: describe
+              }
+          }).done(function () {
+              console.log("success");
+              $.ajax({
+                  type: 'GET',
+                  crossdomain: true,
+                  url: 'http://localhost:8080/todo/add',
+              }).done(function (data) {
+                  let checkboxes = $('#showTasks');
+                  checkboxes.prop('checked', true);
+
+                  let idNumber = data[data.length - 1].id;
+                  let massage = data[data.length - 1].des;
+                  console.log(massage);
+                  let date = data[data.length - 1].created;
+                  let state = data[data.length - 1].done;
+                  let status;
+                  state ? status = '  в работе' : status = 'выполнено';
+                  let el = `<label><input type="checkbox" id="${idNumber}"><span>${status}</span></label>`;
+                  $("#table").find('tbody')
+                      .append($('<tr>')
+                          .append($('<td>')
+                              .text(massage)
+                          ).append($('<td>')
+                              .text(date)
+                          ).append($('<td>')
+                              .append($(el)))
+                      );
+                  if (!state) {
+                      $(`#${idNumber}`).prop('checked', true);
+                  }
+                  $('input:checkbox').click(function () {
+                      if (this.id === 'showTasks') {
+                          return;
+                      }
+                      let id = $(this).get()[0].id;
+                      let status = $(this).parent().find('span').html();
+                      if ($(this).is(':checked')) {
+                          status = " выполнено";
+                          $(this).parent().css('color', 'green');
+                          $(this).parent().find('span').empty().html(`${status}`);
+                          updateStatus(id, false);
+                      } else {
+                          let status = "  в работе";
+                          $(this).parent().css('color', 'black');
+                          $(this).parent().find('span').empty().html(`${status}`);
+                          updateStatus(id, true);
+                      }
+                  });
+                  checkboxes.click(function () {
+                      if (!checkboxes.is(':checked')) {
+                          $('input:checkbox:checked').each(function () {
+                              $(this).parent().parent().parent().hide();
+                          });
+                      }
+                      if (checkboxes.is(':checked')) {
+                          $('input:checkbox:checked').each(function () {
+                              $(this).parent().parent().parent().show();
+                          });
+                      }
+                  });
+              })
+          }).fail(function () {
+              alert("Error")
+          });
+      }
+  }
+
+  $(document).ready(function () {
+      updatePage();
+  });
+
+  function updatePage() {
+      $.ajax({
+          type: 'GET',
+          crossdomain: true,
+          url: 'http://localhost:8080/todo/add',
+      }).done(function (data) {
+          let checkboxes = $('#showTasks');
+          checkboxes.prop('checked', true);
+          for (let i = 0; i < data.length; data[i++]) {
+              let idNumber = data[i].id;
+              let massage = data[i].des;
+              console.log(massage);
+              let date = data[i].created;
+              let state = data[i].done;
+              let status;
+              state ? status = '  в работе' : status = 'выполнено';
+              let el = `<label><input type="checkbox" id="${idNumber}"><span>${status}</span></label>`;
+              $("#table").find('tbody')
+                  .append($('<tr>')
+                      .append($('<td>')
+                          .text(massage)
+                      ).append($('<td>')
+                          .text(date)
+                      ).append($('<td>')
+                          .append($(el)))
+                  );
+              if (!state) {
+                  $(`#${idNumber}`).prop('checked', true);
+              }
+          }
+          $('input:checkbox').click(function () {
+              if (this.id === 'showTasks') {
+                  return;
+              }
+              let id = $(this).get()[0].id;
+              let status = $(this).parent().find('span').html();
+              if ($(this).is(':checked')) {
+                  status = " выполнено";
+                  $(this).parent().css('color', 'green');
+                  $(this).parent().find('span').empty().html(`${status}`);
+                  updateStatus(id, false);
+              } else {
+                  let status = "  в работе";
+                  $(this).parent().css('color', 'black');
+                  $(this).parent().find('span').empty().html(`${status}`);
+                  updateStatus(id, true);
+              }
+          });
+          checkboxes.click(function () {
+              if (!checkboxes.is(':checked')) {
+                  $('input:checkbox:checked').each(function () {
+                      $(this).parent().parent().parent().hide();
+                  });
+              }
+              if (checkboxes.is(':checked')) {
+                  $('input:checkbox:checked').each(function () {
+                      $(this).parent().parent().parent().show();
+                  });
+              }
+          });
+  }).fail(function () {
+      alert("Error")
+  });
+  }
+  
+   function updateStatus(id, state) {
+       $.ajax({
+          type: 'POST',
+         crossdomain: true,
+           url: 'http://localhost:8080/todo/add',
+           data: {
+               id: id + "",
+               des: "text",
+               done: state + ""
+           }
+       }).done(function () {
+           console.log("updateStatus OK");
+       }).fail(function (err) {
+           alert(err);
+      })
+   }
+</script>
+</html>
