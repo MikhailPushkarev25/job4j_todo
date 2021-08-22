@@ -27,7 +27,7 @@ public class MainHiber {
 
             Items items = add(new Items(1, "Сходить в магазин", new Timestamp(1382479274L), false), sf);
              System.out.println(items);
-             items.setId(9);
+             items.setDes("Сходить погулять");
             replace(items, sf);
              System.out.println(items);
              Items rsl = findById(items.getId(), sf);
@@ -55,7 +55,8 @@ public class MainHiber {
 
     public static void replace(Items items, SessionFactory sf) {
         Session session = sf.openSession();
-        session.beginTransaction();
+        //session.beginTransaction();
+        Transaction tx = session.beginTransaction();
         Query query = session.createQuery("UPDATE Items SET id = :id, des = :des, created = :created, done = :done")
                 .setParameter("id", items.getId())
                 .setParameter("des", items.getDes())
