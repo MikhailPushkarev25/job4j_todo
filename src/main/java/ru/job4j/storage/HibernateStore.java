@@ -5,8 +5,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.query.Query;
 import ru.job4j.model.Items;
 
+import java.util.Date;
 import java.util.List;
 
 public class HibernateStore implements Store, AutoCloseable {
@@ -41,15 +43,6 @@ public class HibernateStore implements Store, AutoCloseable {
     }
 
     @Override
-    public void replace(Items items) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.update(items);
-        session.getTransaction().commit();
-        session.close();
-    }
-
-    @Override
     public List<Items> findAll() {
         Session session = sf.openSession();
         session.beginTransaction();
@@ -58,22 +51,17 @@ public class HibernateStore implements Store, AutoCloseable {
         session.close();
         return result;
     }
-
+       @Override
         public void update(Items item) {
         Session session = sf.openSession();
         session.beginTransaction();
-        session.update(item);
-        session.getTransaction().commit();
+        Query query = session.createQuery("UPDATE Items SET id = :id, des = :des, created = :created, done = :done")
+                .setParameter("id", item.getId())
+                .setParameter("des", item.getDes())
+                .setParameter("created", item.getCreated())
+                .setParameter("done", item.getDone());
+        query.executeUpdate();
         session.close();
     }
 
-    @Override
-    public Items findById(int id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Items items = session.get(Items.class, id);
-        session.getTransaction().commit();
-        session.close();
-        return items;
-    }
 }

@@ -45,9 +45,9 @@ public class AddServlet extends HttpServlet {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String date = time.format(formatter);
         Timestamp created = Timestamp.valueOf(date);
-        boolean done = Boolean.parseBoolean(req.getParameter("done"));
+       // boolean done = Boolean.parseBoolean(req.getParameter("done"));
         if (Integer.parseInt(id) != 0) {
-            Items items = new Items(Integer.parseInt(id), des, done);
+            Items items = new Items(Integer.parseInt(id));
             HibernateStore.instOf().update(items);
             return;
         }

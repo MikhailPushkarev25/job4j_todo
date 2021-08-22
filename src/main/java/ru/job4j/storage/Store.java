@@ -8,11 +8,7 @@ public interface Store {
 
     Items add(Items items);
 
-    void replace(Items items);
-
     void update(Items items);
 
     List<Items> findAll();
-
-    Items findById(int id);
 }

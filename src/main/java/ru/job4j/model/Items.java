@@ -38,6 +38,10 @@ public class Items {
         this.done = done;
     }
 
+    public Items(Integer id) {
+        this.id = id;
+    }
+
     public Integer getId() {
         return id;
     }
@@ -62,7 +66,7 @@ public class Items {
         this.created = created;
     }
 
-    public Boolean isDone() {
+    public Boolean getDone() {
         return done;
     }
 

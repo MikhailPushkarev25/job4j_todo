@@ -2,9 +2,12 @@ package ru.job4j.storage;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
+import org.hibernate.query.Query;
 import ru.job4j.model.Items;
 
 import java.sql.Timestamp;
@@ -22,9 +25,9 @@ public class MainHiber {
             SessionFactory sf = new MetadataSources(registry)
                     .buildMetadata().buildSessionFactory();
 
-            Items items = add(new Items("Сходить в магазин", new Timestamp(1382479274L), false), sf);
+            Items items = add(new Items(1, "Сходить в магазин", new Timestamp(1382479274L), false), sf);
              System.out.println(items);
-             items.setDes("Сделать уборку");
+             items.setId(9);
             replace(items, sf);
              System.out.println(items);
              Items rsl = findById(items.getId(), sf);
@@ -53,8 +56,12 @@ public class MainHiber {
     public static void replace(Items items, SessionFactory sf) {
         Session session = sf.openSession();
         session.beginTransaction();
-        session.update(items);
-        session.getTransaction().commit();
+        Query query = session.createQuery("UPDATE Items SET id = :id, des = :des, created = :created, done = :done")
+                .setParameter("id", items.getId())
+                .setParameter("des", items.getDes())
+                .setParameter("created", items.getCreated())
+                .setParameter("done", items.getDone());
+        query.executeUpdate();
         session.close();
     }
 
